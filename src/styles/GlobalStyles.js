@@ -106,6 +106,7 @@ const GlobalStyles = createGlobalStyle`
 
     *:disabled {
         cursor: not-allowed;
+        opacity: 0.7;
     }
 
     select:disabled,

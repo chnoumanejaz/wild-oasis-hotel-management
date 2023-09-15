@@ -37,6 +37,8 @@ const Error = styled.span`
   background-color: var(--color-red-100);
   padding: 0.2rem 0.5rem;
   max-width: fit-content;
+  text-align: left;
+  border-radius: .4rem;
 `;
 
 function FormRow({ label, error, children }) {

@@ -1,34 +1,52 @@
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+
 import Input from '../../ui/Input';
 import Form from '../../ui/Form';
 import Button from '../../ui/Button';
 import FileInput from '../../ui/FileInput';
 import Textarea from '../../ui/Textarea';
-import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createCabin } from '../../services/apiCabins';
-import toast from 'react-hot-toast';
 import FormRow from '../../ui/FormRow';
 
-function CreateCabinForm() {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
+import { useCreateCabin } from './useCreateCabin';
+import { useEditCabin } from './useEditCabin';
+
+function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
+  const { isCreating, createCabin } = useCreateCabin();
+  const { isEditing, editCabin } = useEditCabin();
+  const isWorking = isCreating || isEditing;
+
+  const { id: editId, ...editValues } = cabinToEdit;
+  const isEditingSession = Boolean(editId);
+
+  const { register, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: isEditingSession ? editValues : {},
+  });
   const { errors } = formState;
 
-  const queryClient = useQueryClient();
-
-  const { mutate, isLoading: isCreating } = useMutation({
-    mutationFn: createCabin,
-    onSuccess: () => {
-      toast.success('New cabin created successfully ');
-      queryClient.invalidateQueries({ queryKey: ['cabins'] });
-      reset();
-    },
-    onError: err => {
-      toast.error(err.message);
-    },
-  });
-
   function onSubmit(data) {
-    mutate({ ...data, image: data.image[0] });
+    const image = typeof data.image === 'string' ? data.image : data.image[0];
+
+    if (isEditingSession)
+      editCabin(
+        { newCabinData: { ...data, image }, id: editId },
+        {
+          onSuccess: data => {
+            onCloseModal?.();
+            reset();
+          },
+        }
+      );
+    else
+      createCabin(
+        { ...data, image },
+        {
+          onSuccess: data => {
+            reset();
+            onCloseModal?.();
+          },
+        }
+      );
   }
 
   function onError() {
@@ -36,12 +54,14 @@ function CreateCabinForm() {
   }
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit, onError)}>
+    <Form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      type={onCloseModal ? 'modal' : 'regular'}>
       <FormRow label="Cabin name" error={errors?.name?.message}>
         <Input
           type="text"
           id="name"
-          disabled={isCreating}
+          disabled={isWorking}
           {...register('name', {
             required: 'Please enter the name of cabin',
           })}
@@ -52,7 +72,7 @@ function CreateCabinForm() {
         <Input
           type="number"
           id="maxCapacity"
-          disabled={isCreating}
+          disabled={isWorking}
           {...register('maxCapacity', {
             required: 'Please enter the max capacity of cabin',
             min: {
@@ -67,7 +87,7 @@ function CreateCabinForm() {
         <Input
           type="number"
           id="regularPrice"
-          disabled={isCreating}
+          disabled={isWorking}
           {...register('regularPrice', {
             required: 'Please enter the price of cabin',
             min: {
@@ -82,7 +102,7 @@ function CreateCabinForm() {
         <Input
           type="number"
           id="discount"
-          disabled={isCreating}
+          disabled={isWorking}
           defaultValue={0}
           {...register('discount', {
             required: 'Please enter discount if there is any',
@@ -103,7 +123,7 @@ function CreateCabinForm() {
         <Textarea
           type="number"
           id="description"
-          disabled={isCreating}
+          disabled={isWorking}
           defaultValue=""
           {...register('description', {
             required: 'Please enter the description for cabin',
@@ -116,18 +136,25 @@ function CreateCabinForm() {
           id="image"
           accept="image/*"
           type="file"
-          disabled={isCreating}
+          disabled={isWorking}
           {...register('image', {
-            required: 'Please select an image of a cabin',
+            required: isEditingSession
+              ? false
+              : 'Please select an image of a cabin',
           })}
         />
       </FormRow>
 
       <FormRow>
-        <Button variation="secondary" type="reset">
+        <Button
+          variation="secondary"
+          type="reset"
+          onClick={() => onCloseModal?.()}>
           Cancel
         </Button>
-        <Button disabled={isCreating}>Add cabin</Button>
+        <Button disabled={isWorking}>
+          {isEditingSession ? 'Edit cabin' : 'Create new cabin'}
+        </Button>
       </FormRow>
     </Form>
   );
