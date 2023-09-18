@@ -53,6 +53,11 @@ const Button = styled.button`
   border-radius: var(--border-radius-sm);
   box-shadow: var(—shadow—sm);
 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .6rem;
+
   ${props => sizes[props.size]}
   ${props => variations[props.variation]}
 `;
