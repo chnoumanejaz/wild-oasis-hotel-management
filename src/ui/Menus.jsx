@@ -108,7 +108,6 @@ function List({ id, children }) {
 
   return createPortal(
     <StyledList position={position} ref={ref}>
-      {' '}
       {children}
     </StyledList>,
     document.body
