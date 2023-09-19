@@ -16,6 +16,7 @@ import { HiArrowUpOnSquare } from 'react-icons/hi2';
 import { useCheckout } from '../check-in-out/useCheckout';
 import Modal from '../../ui/Modal';
 import ConfirmDelete from '../../ui/ConfirmDelete';
+import Empty from '../../ui/Empty';
 import { useDeleteBookings } from './useDeleteBookings';
 
 const HeadingGroup = styled.div`
@@ -32,6 +33,7 @@ function BookingDetail() {
   const moveBack = useMoveBack();
   const navigate = useNavigate();
   if (isLoading) return <Spinner />;
+  if (!booking) return <Empty resource="booking" />;
   const statusToTagName = {
     unconfirmed: 'red',
     'checked-in': 'green',
@@ -75,11 +77,13 @@ function BookingDetail() {
             <ConfirmDelete
               resourceName={'booking'}
               disabled={isDeleting}
-              onConfirm={() => deleteTheBooking(bookingId, {
-                onSuccess: () => {
-                  navigate(-1)
-                }
-              })}
+              onConfirm={() =>
+                deleteTheBooking(bookingId, {
+                  onSuccess: () => {
+                    navigate(-1);
+                  },
+                })
+              }
             />
           </Modal.Window>
         </Modal>
